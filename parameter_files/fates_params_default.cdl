@@ -686,6 +686,9 @@ variables:
 	double fates_soil_salinity ;
 		fates_soil_salinity:units = "ppt" ;
 		fates_soil_salinity:long_name = "soil salinity used for model when not coupled to dynamic soil salinity" ;
+	double fates_mp_frac(fates_pft) ;
+		fates_mp_frac:units = "unitless" ;
+		fates_mp_frac:long_name = "macropore fraction for water flux from top of soil" ;
 
 // global attributes:
 		:history = "This parameter file is maintained in version control\nSee https://github.com/NGEET/fates/blob/master/parameter_files/fates_params_default.cdl \nFor changes, use git blame \n" ;
@@ -1352,4 +1355,6 @@ data:
  fates_q10_mr = 1.5 ;
 
  fates_soil_salinity = 0.4 ;
+
+ fates_mp_frac = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ;
 }
