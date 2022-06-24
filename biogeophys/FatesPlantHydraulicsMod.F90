@@ -5615,7 +5615,7 @@ endif
     ! Maximum number of times we re-try a round of Picard
     ! iterations, each time decreasing the time-step and
     ! potentially reducing relaxation factors
-    integer, parameter :: max_picard_rounds = 100
+    integer, parameter :: max_picard_rounds = 10
     
     ! dtime will shrink at the following rate (halving) [s]: 
     ! 1800,900,450,225,112.5,56.25,28.125,14.0625,7.03125,3.515625,
@@ -5847,11 +5847,18 @@ endif
       
       !Calculate time step that meet cfl condition
       if(cfl_max > cfl) then
-         nsteps = min(int(cfl_max/cfl) + 1, 20)
+         nsteps = min(int(cfl_max/cfl) + 1, 3)
          dtime = tmx/nsteps
       end if       
 
       icnv = 0
+#if 0
+!explicit integration
+      icnv=1
+!         nsteps = 3
+         nsteps = 6
+         dtime = tmx/nsteps
+#endif     
       outerloop: do while( tm < tmx )
           
           ! The solve may reduce the time-step, the shorter
@@ -6019,10 +6026,10 @@ endif
              wb_error = qtop*dtime - (sum( th_node_prev(:)*v_node(:) ) - sum( th_node(:)*v_node(:) ))*denh2o
              
              ! Mass is conserved or solver is converged
-             if(abs(wb_error) < max_allowed_residual .or. maxval(abs(residual(:))) < 1.e-3_r8 .or. maxval(abs(th_node(:) - th_prev(:))) < 1.e-3) exit picardloop
+             if(abs(wb_error) < max_allowed_residual) exit picardloop ! .or. maxval(abs(residual(:))) < 1.e-5_r8 .or. maxval(abs(th_node(:) - th_prev(:))) < 1.e-5) exit picardloop
 
              if(icnv == 1 ) then
-print *,'dtime-',dtime,tm
+!print *,'dtime-',dtime,tm
                 exit picardloop !explicit integration with small time step
              end if
 
@@ -6032,6 +6039,7 @@ print *,'dtime-',dtime,tm
 
                  ! reset to initial condition
                  tm  = 0._r8
+                 dtime = tmx/3
                  th_node(:)         = th_node_init(:)
                  th_node_prev(:)    = th_node_init(:)
 

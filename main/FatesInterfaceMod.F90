@@ -306,6 +306,7 @@ contains
        fates%bc_out(s)%qflx_ro_sisl(:)        = 0.0_r8
     end if
     fates%bc_out(s)%plant_stored_h2o_si = 0.0_r8
+    fates%bc_out(s)%mp_frac   = 0.0_r8
     
     return
   end subroutine zero_bcs
@@ -1167,6 +1168,7 @@ contains
          hlm_sf_successful_ignitions_def = unset_int
          hlm_sf_anthro_ignitions_def = unset_int
          hlm_use_planthydro = unset_int
+         hlm_use_macropore = unset_int
          hlm_use_lu_harvest   = unset_int
          hlm_num_lu_harvest_cats   = unset_int
          hlm_use_cohort_age_tracking = unset_int
@@ -1243,6 +1245,12 @@ contains
             call endrun(msg=errMsg(sourcefile, __LINE__))
          end if
 
+         if ( .not.((hlm_use_macropore .eq.1).or.(hlm_use_macropore.eq.0))    ) then
+            if (fates_global_verbose()) then
+               write(fates_log(), *) 'The FATES namelist use_macropore flag must be 0 or 1, exiting'
+            end if
+            call endrun(msg=errMsg(sourcefile, __LINE__))
+         end if
 
          if ( ( ANY(EDPftvarcon_inst%mort_ip_age_senescence < fates_check_param_set )) .and. &
            (hlm_use_cohort_age_tracking .eq.0 ) ) then
@@ -1600,6 +1608,12 @@ contains
                hlm_use_planthydro = ival
                if (fates_global_verbose()) then
                   write(fates_log(),*) 'Transfering hlm_use_planthydro= ',ival,' to FATES'
+               end if
+
+            case('use_macropore')
+               hlm_use_macropore = ival
+               if (fates_global_verbose()) then
+                  write(fates_log(),*) 'Transfering hlm_use_macropore= ',ival,' to FATES'
                end if
 
             case('use_lu_harvest')
