@@ -26,6 +26,7 @@ module EDCanopyStructureMod
   use FatesGlobals          , only : endrun => fates_endrun
   use FatesInterfaceTypesMod     , only : hlm_days_per_year
   use FatesInterfaceTypesMod     , only : hlm_use_planthydro
+  use FatesInterfaceTypesMod     , only : hlm_use_macropore
   use FatesInterfaceTypesMod     , only : hlm_use_cohort_age_tracking
   use FatesInterfaceTypesMod     , only : numpft
   use FatesPlantHydraulicsMod, only : UpdateH2OVeg,InitHydrCohort, RecruitWaterStorage
@@ -1876,7 +1877,7 @@ contains
                                     ed_site_type, AREA
      use FatesInterfaceTypesMod , only : bc_out_type
      use EDPftvarcon       , only : EDPftvarcon_inst
-
+     use FatesConstantsMod,     only : g_per_kg
 
      !
      ! !ARGUMENTS    
@@ -1893,7 +1894,9 @@ contains
      real(r8) :: total_patch_area
      real(r8) :: total_canopy_area
      real(r8) :: weight  ! Weighting for cohort variables in patch
-
+     integer :: ft
+     real(r8) :: fnrt_c
+     real(r8) :: l_aroot_tot, l_aroot_tot_wt_frac, l_aroot_tot_sum
 
      do s = 1,nsites
 
@@ -1903,6 +1906,9 @@ contains
         bc_out(s)%canopy_fraction_pa(:) = 0._r8
         currentPatch => sites(s)%oldest_patch
         c = fcolumn(s)
+        l_aroot_tot_sum = 0.0_r8
+        l_aroot_tot_wt_frac = 0.0_r8
+        bc_out(s)%mp_frac = 0.0_r8
         do while(associated(currentPatch))
            ifp = ifp+1
 
@@ -1983,10 +1989,25 @@ contains
            else
               bc_out(s)%frac_veg_nosno_alb_pa(ifp) = 0.0_r8
            end if
+
+           if( hlm_use_macropore.eq.itrue) then
+              currentCohort => currentPatch%tallest
+              do while(associated(currentCohort))  
+                 ft       = currentCohort%pft
+                 fnrt_c   = currentCohort%prt%GetState(fnrt_organ, all_carbon_elements)
+                 l_aroot_tot  = fnrt_c*g_per_kg*EDPftvarcon_inst%c2b(ft)*EDPftvarcon_inst%hydr_srl(ft)*currentCohort%n
+                 l_aroot_tot_wt_frac  = l_aroot_tot_wt_frac + l_aroot_tot*EDPftvarcon_inst%mp_frac(ft)
+                 l_aroot_tot_sum  = l_aroot_tot_sum + l_aroot_tot
+                 currentCohort => currentCohort%shorter
+              end do !cohort
+           end if
            
            currentPatch => currentPatch%younger
         end do
 
+        if( hlm_use_macropore.eq.itrue) then
+           bc_out(s)%mp_frac = l_aroot_tot_wt_frac/l_aroot_tot_sum
+        end if
 
         ! Apply patch and canopy area corrections
         ! If the difference is above reasonable math precision, apply a fix

@@ -150,7 +150,7 @@ contains
        fates%bc_in(s)%salinity_sl(:)   = 0.0_r8
     endif
     
-    if (hlm_use_planthydro.eq.itrue) then
+!    if (hlm_use_planthydro.eq.itrue) then
        
        fates%bc_in(s)%qflx_transp_pa(:) = 0.0_r8
        fates%bc_in(s)%swrad_net_pa(:) = 0.0_r8
@@ -160,7 +160,7 @@ contains
        fates%bc_in(s)%sucsat_sisl(:) = 0.0_r8
        fates%bc_in(s)%bsw_sisl(:) = 0.0_r8
        fates%bc_in(s)%hksat_sisl(:) = 0.0_r8
-    end if
+!    end if
 
     
     ! Output boundaries
@@ -226,6 +226,7 @@ contains
     end if
     fates%bc_out(s)%plant_stored_h2o_si = 0.0_r8
     
+    fates%bc_out(s)%mp_frac   = 0.0_r8
     return
   end subroutine zero_bcs
 
@@ -340,7 +341,7 @@ contains
       allocate(bc_in%albgr_dif_rb(hlm_numSWb))
 
       ! Plant-Hydro BC's
-      if (hlm_use_planthydro.eq.itrue) then
+!      if (hlm_use_planthydro.eq.itrue) then
 
          allocate(bc_in%qflx_transp_pa(maxPatchesPerSite))
          allocate(bc_in%swrad_net_pa(maxPatchesPerSite))
@@ -352,7 +353,7 @@ contains
          allocate(bc_in%bsw_sisl(nlevsoil_in))
          allocate(bc_in%hksat_sisl(nlevsoil_in))
          allocate(bc_in%h2o_liq_sisl(nlevsoil_in)); bc_in%h2o_liq_sisl = nan
-      end if
+!      end if
 
       return
    end subroutine allocate_bcin
@@ -982,6 +983,7 @@ contains
          hlm_parteh_mode   = unset_int
          hlm_use_spitfire  = unset_int
          hlm_use_planthydro = unset_int
+         hlm_use_macropore = unset_int
          hlm_use_cohort_age_tracking = unset_int
          hlm_use_logging   = unset_int
          hlm_use_ed_st3    = unset_int
@@ -1036,6 +1038,13 @@ contains
          if ( .not.((hlm_use_logging .eq.1).or.(hlm_use_logging.eq.0))    ) then
             if (fates_global_verbose()) then
                write(fates_log(), *) 'The FATES namelist use_logging flag must be 0 or 1, exiting'
+            end if
+            call endrun(msg=errMsg(sourcefile, __LINE__))
+         end if
+
+         if ( .not.((hlm_use_macropore .eq.1).or.(hlm_use_macropore.eq.0))    ) then
+            if (fates_global_verbose()) then
+               write(fates_log(), *) 'The FATES namelist use_macropore flag must be 0 or 1, exiting'
             end if
             call endrun(msg=errMsg(sourcefile, __LINE__))
          end if
@@ -1274,6 +1283,12 @@ contains
                hlm_use_planthydro = ival
                if (fates_global_verbose()) then
                   write(fates_log(),*) 'Transfering hlm_use_planthydro= ',ival,' to FATES'
+               end if
+
+            case('use_macropore')
+               hlm_use_macropore = ival
+               if (fates_global_verbose()) then
+                  write(fates_log(),*) 'Transfering hlm_use_macropore= ',ival,' to FATES'
                end if
 
             case('use_cohort_age_tracking')

@@ -75,6 +75,7 @@ module EDPftvarcon
                                                      ! 3) 2-param exponential 4) Zeng (not yet unified)
      real(r8),allocatable :: fnrt_prof_a(:)          ! a parameter for fine-root profile (1st parameter)
      real(r8),allocatable :: fnrt_prof_b(:)          ! b parameter for fine-root profile (2nd parameter)
+     real(r8),allocatable :: mp_frac(:)              ! macropore fraction due to roots 
      
      real(r8), allocatable :: lf_flab(:)             ! Leaf litter labile fraction [-]
      real(r8), allocatable :: lf_fcel(:)             ! Leaf litter cellulose fraction [-]
@@ -517,6 +518,10 @@ contains
          dimension_names=dim_names, lower_bounds=dim_lower_bound)
 
     name = 'fates_fnrt_prof_b'
+    call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
+         dimension_names=dim_names, lower_bounds=dim_lower_bound)
+
+    name = 'fates_mp_frac'
     call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
          dimension_names=dim_names, lower_bounds=dim_lower_bound)
 
@@ -1044,6 +1049,10 @@ contains
     name = 'fates_fnrt_prof_b'
     call fates_params%RetreiveParameterAllocate(name=name, &
          data=this%fnrt_prof_b)
+
+    name = 'fates_mp_frac'
+    call fates_params%RetreiveParameterAllocate(name=name, &
+         data=this%mp_frac)
 
     
     name = 'fates_lf_flab'
@@ -1997,6 +2006,7 @@ contains
         write(fates_log(),fmt0) 'fnrt_prof_mode = ',EDPftvarcon_inst%fnrt_prof_mode
         write(fates_log(),fmt0) 'fnrt_prof_a = ',EDPftvarcon_inst%fnrt_prof_a
         write(fates_log(),fmt0) 'fnrt_prof_b = ',EDPftvarcon_inst%fnrt_prof_b
+        write(fates_log(),fmt0) 'mp_frac = ',EDPftvarcon_inst%mp_frac
         write(fates_log(),fmt0) 'lf_flab = ',EDPftvarcon_inst%lf_flab
         write(fates_log(),fmt0) 'lf_fcel = ',EDPftvarcon_inst%lf_fcel
         write(fates_log(),fmt0) 'lf_flig = ',EDPftvarcon_inst%lf_flig

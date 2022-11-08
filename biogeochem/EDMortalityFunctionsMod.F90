@@ -52,6 +52,8 @@ contains
     use FatesConstantsMod,  only : tfrz => t_water_freeze_k_1atm
     use FatesInterfaceTypesMod        , only : hlm_hio_ignore_val   
     use FatesConstantsMod,  only : fates_check_param_set
+    use FatesConstantsMod, only : denh2o => dens_fresh_liquid_water
+    use FatesConstantsMod, only : grav_earth
     
     type (ed_cohort_type), intent(in) :: cohort_in 
     type (bc_in_type), intent(in) :: bc_in
@@ -83,7 +85,7 @@ contains
     logical, parameter :: test_zero_mortality = .false. ! Developer test which
                                                         ! may help to debug carbon imbalances
                                                         ! and the like
-     
+    real(r8) :: th, th_sat, psi, psi_sat, beta 
    ! Size Dependent Senescence
     ! rate (r) and inflection point (ip) define the increase in mortality rate with dbh
     mort_r_size_senescence = EDPftvarcon_inst%mort_r_size_senescence(cohort_in%pft)
@@ -202,7 +204,15 @@ if (hlm_use_ed_prescribed_phys .eq. ifalse) then
        smort = 0.0_r8
        asmort = 0.0_r8
     end if
-       
+!   soil moisture dependency
+#if 0
+    th = bc_in%h2o_liqvol_sl(3)
+    psi_sat = bc_in%sucsat_sisl(3) * grav_earth * denh2o * 1e-6 * 1e-3
+    th_sat = bc_in%watsat_sisl(3)
+    beta = bc_in%bsw_sisl(3)
+    psi =  -psi_sat*(th/th_sat)**(-beta)
+    bmort = EDPftvarcon_inst%bmort(cohort_in%pft) - 0.49 * psi
+#endif
     return
  end subroutine mortality_rates
 
