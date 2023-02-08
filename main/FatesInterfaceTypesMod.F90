@@ -140,7 +140,12 @@ module FatesInterfaceTypesMod
    integer, public :: hlm_use_planthydro    ! This flag signals whether or not to use
                                                        ! plant hydraulics (bchristo/xu methods)
                                                        ! 1 = TRUE, 0 = FALSE
-                                                       ! THIS IS CURRENTLY NOT SUPPORTED 
+                                                       ! THIS IS CURRENTLY NOT SUPPORTED
+
+   integer, public :: hlm_use_macropore     ! This flag signals whether or not to use
+                                                       ! macropore to bypass
+                                                       ! soil matrix water
+                                                       ! 1 = TRUE, 0 = FALSE 
 
    integer, public :: hlm_use_cohort_age_tracking ! This flag signals whether or not to use
                                                   ! cohort age tracking. 1 = TRUE, 0 = FALSE
@@ -724,6 +729,7 @@ module FatesInterfaceTypesMod
                                                        ! small fluxes for various reasons
                                                        ! [mm H2O/s]
 
+      real(r8) :: mp_frac         ! fraction of soil water flux from top into macropores [-] 
 
       ! FATES LULCC
       real(r8) :: hrv_deadstemc_to_prod10c   ! Harvested C flux to 10-yr wood product pool [Site-Level, gC m-2 s-1]
