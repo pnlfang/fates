@@ -1964,6 +1964,9 @@ contains
                  fnrt_c   = currentCohort%prt%GetState(fnrt_organ,carbon12_element)
                  l_aroot_tot  = fnrt_c*g_per_kg*prt_params%c2b(ft)*EDPftvarcon_inst%hydr_srl(ft)*currentCohort%n
                  l_aroot_tot_wt_frac  = l_aroot_tot_wt_frac + l_aroot_tot*prt_params%mp_frac(ft)
+ print *,'ft--',ft
+print *,'sum-',l_aroot_tot_sum
+print *,'ind-',l_aroot_tot
                  l_aroot_tot_sum  = l_aroot_tot_sum + l_aroot_tot
                  currentCohort => currentCohort%shorter
               end do !cohort
