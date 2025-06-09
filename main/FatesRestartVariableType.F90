@@ -88,7 +88,9 @@ contains
     select case(trim(vtype))
 
     case(cohort_r8)
+!       print *,'----------erro---',vname,lb1,ub1,long
        allocate(this%r81d(lb1:ub1))
+!       print *,'after----------erro---',vname,lb1,ub1,long
        this%r81d(:) = flushval
 
     case(site_r8)

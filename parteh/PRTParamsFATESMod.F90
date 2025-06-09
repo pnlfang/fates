@@ -172,6 +172,10 @@ contains
     call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
          dimension_names=dim_names, lower_bounds=dim_lower_bound)
 
+    name = 'fates_mp_frac'
+    call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
+         dimension_names=dim_names, lower_bounds=dim_lower_bound)
+
     name = 'fates_allom_fnrt_prof_mode'
     call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
           dimension_names=dim_names, lower_bounds=dim_lower_bound)
@@ -447,6 +451,10 @@ contains
     name = 'fates_allom_fnrt_prof_b'
     call fates_params%RetrieveParameterAllocate(name=name, &
          data=prt_params%fnrt_prof_b)
+
+    name = 'fates_mp_frac'
+    call fates_params%RetrieveParameterAllocate(name=name, &
+         data=prt_params%mp_frac)
 
     name = 'fates_allom_fnrt_prof_mode'
     call fates_params%RetrieveParameterAllocate(name=name, &
@@ -928,6 +936,7 @@ contains
         write(fates_log(),fmt0) 'crown_depth_frac = ',prt_params%crown_depth_frac
         write(fates_log(),fmt0) 'roota_par = ',prt_params%fnrt_prof_a
         write(fates_log(),fmt0) 'rootb_par = ',prt_params%fnrt_prof_b
+        write(fates_log(),fmt0) 'mp_frac = ',prt_params%mp_frac
         write(fates_log(),fmt0) 'fnrt_prof_mode = ',prt_params%fnrt_prof_mode
         write(fates_log(),fmt0) 'turnover_nitr_retrans = ',prt_params%turnover_nitr_retrans
         write(fates_log(),fmt0) 'turnover_phos_retrans = ',prt_params%turnover_phos_retrans

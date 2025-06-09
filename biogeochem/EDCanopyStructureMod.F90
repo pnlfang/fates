@@ -24,7 +24,8 @@ module EDCanopyStructureMod
   use EDTypesMod            , only : nlevleaf
   use EDtypesMod            , only : AREA
   use EDLoggingMortalityMod , only : UpdateHarvestC
-  use FatesGlobals          , only : endrun => fates_endrun
+!  use FatesGlobals          , only : endrun => fates_endrun
+  use abortutils         , only : endrun
   use FatesInterfaceTypesMod     , only : hlm_days_per_year
   use FatesInterfaceTypesMod     , only : hlm_use_planthydro
   use FatesInterfaceTypesMod     , only : hlm_use_macropore
@@ -1282,7 +1283,8 @@ contains
 
   ! =====================================================================================
 
-  subroutine canopy_summarization( nsites, sites, bc_in )
+  !subroutine canopy_summarization( nsites, sites, bc_in,fcolumn)
+  subroutine canopy_summarization( nsites, sites, bc_in)
 
     ! ----------------------------------------------------------------------------------
     ! Much of this routine was once ed_clm_link minus all the IO and history stuff
@@ -1294,16 +1296,18 @@ contains
     use FatesSizeAgeTypeIndicesMod, only : coagetype_class_index
     use EDtypesMod           , only : area
     use FatesConstantsMod    , only : itrue
+  use elm_varcon         , only : namec
 
     ! !ARGUMENTS
     integer                 , intent(in)            :: nsites
+!    integer,            intent(in)            :: fcolumn(nsites)
     type(ed_site_type)      , intent(inout), target :: sites(nsites)
     type(bc_in_type)        , intent(in)            :: bc_in(nsites)
     !
     ! !LOCAL VARIABLES:
     type (ed_patch_type)  , pointer :: currentPatch
     type (ed_cohort_type) , pointer :: currentCohort
-    integer  :: s
+    integer  :: s,indexc
     integer  :: ft               ! plant functional type
     integer  :: ifp              ! the number of the vegetated patch (1,2,3). In SP mode bareground patch is 0
     integer  :: patchn           ! identification number for each patch.
@@ -1318,8 +1322,7 @@ contains
     if ( debug ) then
        write(fates_log(),*) 'in canopy_summarization'
     endif
-
-    do s = 1,nsites
+    site_loop: do s = 1,nsites
 
        ! --------------------------------------------------------------------------------
        ! Set the patch indices (this is usefull mostly for communicating with a host or
@@ -1327,6 +1330,7 @@ contains
        ! order of oldest to youngest where the oldest is 1.
        ! --------------------------------------------------------------------------------
        call set_patchno( sites(s) )
+!       indexc = fcolumn(s)
 
        currentPatch => sites(s)%oldest_patch
 
@@ -1385,7 +1389,9 @@ contains
                 if(currentPatch%total_canopy_area-currentPatch%area.gt.1.0e-16)then
                    write(fates_log(),*) 'too much canopy in summary',s, &
                         currentPatch%nocomp_pft_label, currentPatch%total_canopy_area-currentPatch%area
+!                   exit site_loop
                    call endrun(msg=errMsg(sourcefile, __LINE__))
+!                   call endrun(decomp_index=indexc, elmlevel=namec, msg=errmsg(sourcefile, __LINE__))
                 end if
              end if  !sp mode
 
@@ -1429,7 +1435,7 @@ contains
     
        call leaf_area_profile(sites(s))
 
-    end do ! site loop
+    end do site_loop! site loop
 
     return
   end subroutine canopy_summarization
@@ -1962,11 +1968,15 @@ contains
               do while(associated(currentCohort))  
                  ft       = currentCohort%pft
                  fnrt_c   = currentCohort%prt%GetState(fnrt_organ,carbon12_element)
+!print *,'fnrt-',fnrt_c
+!print *,'srl-',ft
+!print *,'srl',EDPftvarcon_inst%hydr_srl(ft)
+!print *,'n-',currentCohort%n
                  l_aroot_tot  = fnrt_c*g_per_kg*prt_params%c2b(ft)*EDPftvarcon_inst%hydr_srl(ft)*currentCohort%n
                  l_aroot_tot_wt_frac  = l_aroot_tot_wt_frac + l_aroot_tot*prt_params%mp_frac(ft)
- print *,'ft--',ft
-print *,'sum-',l_aroot_tot_sum
-print *,'ind-',l_aroot_tot
+! print *,'ft--',ft
+!print *,'sum-',l_aroot_tot_sum
+!print *,'ind-',l_aroot_tot
                  l_aroot_tot_sum  = l_aroot_tot_sum + l_aroot_tot
                  currentCohort => currentCohort%shorter
               end do !cohort

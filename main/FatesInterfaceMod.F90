@@ -401,7 +401,8 @@ contains
          write(fates_log(), *) 'found in EDTypesMod.F90'
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
-
+#if 0
+      if(hlm_use_sp==ifalse)then
       if( (nlevsoil_in*ndcmpy) > fates_maxElementsPerPatch .or. &
           (nlevsoil_in*ncwd) > fates_maxElementsPerPatch) then
           write(fates_log(), *) 'The restart files require that space is allocated'
@@ -416,7 +417,8 @@ contains
           write(fates_log(), *) 'To increase max_elements, change numlevsoil_max'
           call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
-
+      end if
+#endif
       bc_in%nlevdecomp = nlevdecomp_in
 
 
@@ -834,8 +836,12 @@ contains
          
          ! These values are used to define the restart file allocations and general structure
          ! of memory for the cohort arrays
-         
-         fates_maxElementsPerPatch = max(1, ndcmpy*hlm_maxlevsoil ,ncwd*hlm_maxlevsoil)
+         if(hlm_use_sp) then
+            !fates_maxElementsPerPatch = max(1 , ndcmpy*hlm_maxlevsoil,ncwd*hlm_maxlevsoil)
+            fates_maxElementsPerPatch = 1
+         else
+            fates_maxElementsPerPatch = max(max_cohort_per_patch, ndcmpy*hlm_maxlevsoil ,ncwd*hlm_maxlevsoil)
+         end if
          
          if (fates_maxPatchesPerSite * fates_maxElementsPerPatch <  numWaterMem) then
             write(fates_log(), *) 'By using such a tiny number of maximum patches and maximum cohorts'
@@ -845,6 +851,7 @@ contains
          end if
          
          fates_maxElementsPerSite = fates_maxPatchesPerSite * fates_maxElementsPerPatch
+print *,'fates_maxElements---err-',fates_maxPatchesPerSite,fates_maxElementsPerPatch, fates_maxElementsPerSite
 
 
          ! Set the maximum number of nutrient aquisition competitors per site

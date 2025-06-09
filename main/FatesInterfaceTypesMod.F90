@@ -501,6 +501,8 @@ module FatesInterfaceTypesMod
 
       ! volumetric soil water at saturation (porosity)
       real(r8), allocatable :: watsat_sl(:)
+      ! volumetric soil water at residual 
+      !real(r8), allocatable :: watres_sl(:)
 
       ! Temperature of soil layers [K]
       real(r8), allocatable :: tempk_sl(:)

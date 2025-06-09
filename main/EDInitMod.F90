@@ -9,7 +9,7 @@ module EDInitMod
   use FatesConstantsMod         , only : itrue
   use FatesConstantsMod         , only : fates_unset_int
   use FatesConstantsMod         , only : primaryforest
-  use FatesConstantsMod   , only : nearzero
+  use FatesConstantsMod   , only : nearzero, area_error_4, area_error_3
   use FatesGlobals              , only : endrun => fates_endrun
   use EDTypesMod                , only : nclmax
   use FatesGlobals              , only : fates_log
@@ -500,6 +500,7 @@ contains
     integer  :: el
     real(r8) :: age !notional age of this patch
     integer  :: ageclass
+    real(r8) :: area_diff
     
     ! dummy locals
     real(r8) :: biomass_stock
@@ -512,11 +513,13 @@ contains
     real(r8) :: newparea
     real(r8) :: tota !check on area
     integer  :: is_first_patch
+    real(r8) :: old_carea
 
     type(ed_site_type),  pointer :: sitep
     type(ed_patch_type), pointer :: newppft(:)
     type(ed_patch_type), pointer :: newp
     type(ed_patch_type), pointer :: currentPatch
+    type(ed_cohort_type), pointer :: cohort
 
     ! List out some nominal patch values that are used for Near Bear Ground initializations
     ! as well as initializing inventory
@@ -651,22 +654,39 @@ contains
              newp=>newp%younger
           end do
 
-          if(abs(tota-area).gt.nearzero*area)then
-             if(abs(tota-area).lt.1.0e-10_r8)then ! this is a precision error
-                if(sites(s)%oldest_patch%area.gt.(tota-area+nearzero))then
+          area_diff = tota - area
+          if (abs(area_diff) > nearzero) then
+             if (abs(area_diff) < area_error_4) then ! this is a precision error
+                if (sites(s)%oldest_patch%area > area_diff + nearzero) then
                    ! remove or add extra area
                    ! if the oldest patch has enough area, use that
-                   sites(s)%oldest_patch%area = sites(s)%oldest_patch%area - (tota-area)
-                   if(debug) write(fates_log(),*) 'fixing patch precision - oldest',s, tota-area
+                   sites(s)%oldest_patch%area = sites(s)%oldest_patch%area - area_diff
+                   if (debug) write(fates_log(),*) 'fixing patch precision - oldest', s, area_diff
                 else ! or otherwise take the area from the youngest patch.
-                   sites(s)%youngest_patch%area = sites(s)%oldest_patch%area - (tota-area)
-                   if(debug) write(fates_log(),*) 'fixing patch precision -youngest ',s, tota-area
-                endif
+                   sites(s)%youngest_patch%area = sites(s)%youngest_patch%area - area_diff
+                   if (debug) write(fates_log(),*) 'fixing patch precision -youngest ', s, area_diff
+                end if
              else !this is a big error not just a precision error.
-                write(fates_log(),*) 'issue with patch area in EDinit',tota-area,tota
+                write(fates_log(),*) 'issue with patch area in EDinit', area_diff, tota
                 call endrun(msg=errMsg(sourcefile, __LINE__))
-             endif  ! big error
+             end if  ! big error
           end if ! too much patch area
+          ! we might have messed up patch area now - need to correct if SP mode
+          if (hlm_use_sp .eq. itrue) then 
+            newp => sites(s)%oldest_patch
+            do while (associated(newp))
+              cohort => newp%tallest
+              do while (associated(cohort))
+                if (abs(cohort%c_area - newp%area) < area_error_3) then !correct if it's a very small error
+                  old_carea = cohort%c_area 
+                  cohort%c_area = cohort%c_area - (cohort%c_area - newp%area)
+                  cohort%n = cohort%n*(cohort%c_area/old_carea)
+                end if 
+                cohort => cohort%shorter
+              end do 
+              newp => newp%younger
+            end do
+          end if 
 
           ! For carbon balance checks, we need to initialize the
           ! total carbon stock

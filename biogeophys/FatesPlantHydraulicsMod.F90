@@ -353,7 +353,7 @@ contains
     real(r8) :: watsat ! Mean wsat across soil layers contributing to current root layer
     real(r8) :: sucsat ! Mean sucsat across soil layers contributing to current root layer
     real(r8) :: bsw    ! Mean bsw across soil layers contributing to current root layer
-
+    real(r8) :: x_alpha_vg, x_psd_vg, x_m_vg
     
     do s = 1,nsites
        csite_hydr=>sites(s)%si_hydr
@@ -405,7 +405,11 @@ contains
              watsat = csite_hydr%AggBCToRhiz(bc_in(s)%watsat_sisl,j,bc_in(s)%dz_sisl)
              allocate(wrf_vg)
              sites(s)%si_hydr%wrf_soil(j)%p => wrf_vg
-             call wrf_vg%set_wrf_param([alpha_vg, psd_vg, m_vg, watsat, th_res_vg])
+             !call wrf_vg%set_wrf_param([alpha_vg, psd_vg, m_vg, watsat, th_res_vg])
+             x_alpha_vg = csite_hydr%AggBCToRhiz(bc_in(s)%sucsat_sisl,j,bc_in(s)%dz_sisl)
+             x_psd_vg    = csite_hydr%AggBCToRhiz(bc_in(s)%bsw_sisl,j,bc_in(s)%dz_sisl)
+             x_m_vg    = 1._r8-x_psd_vg
+             call wrf_vg%set_wrf_param([x_alpha_vg, x_psd_vg, x_m_vg, watsat, th_res_vg])
           end do
        case(campbell_type)
           do j=1,sites(s)%si_hydr%nlevrhiz
@@ -457,7 +461,10 @@ contains
           do j=1,sites(s)%si_hydr%nlevrhiz
              allocate(wkf_vg)
              sites(s)%si_hydr%wkf_soil(j)%p => wkf_vg
-             call wkf_vg%set_wkf_param([alpha_vg, psd_vg, m_vg, th_sat_vg, th_res_vg, soil_tort_vg])
+             x_alpha_vg = csite_hydr%AggBCToRhiz(bc_in(s)%sucsat_sisl,j,bc_in(s)%dz_sisl)
+             x_psd_vg    = csite_hydr%AggBCToRhiz(bc_in(s)%bsw_sisl,j,bc_in(s)%dz_sisl)
+             x_m_vg    = 1._r8-x_psd_vg
+             call wkf_vg%set_wkf_param([x_alpha_vg, x_psd_vg, x_m_vg, th_sat_vg, th_res_vg, soil_tort_vg])
           end do
        case(campbell_type)
           do j=1,sites(s)%si_hydr%nlevrhiz
@@ -1579,6 +1586,7 @@ subroutine HydrSiteColdStart(sites, bc_in )
   real(r8) :: h2osoi_liqvol ! liquid water content (m3/m3)
   real(r8) :: eff_por       ! effective porosity (m3/m3)
   real(r8) :: watsat,sucsat,bsw
+  real(r8) :: x_alpha_vg, x_psd_vg, x_m_vg
   integer :: s
   integer :: j,j_t,j_b
   integer :: nsites
@@ -1627,7 +1635,10 @@ subroutine HydrSiteColdStart(sites, bc_in )
         do j=1,sites(s)%si_hydr%nlevrhiz
            allocate(wrf_vg)
            csite_hydr%wrf_soil(j)%p => wrf_vg
-           call wrf_vg%set_wrf_param([alpha_vg, psd_vg, m_vg, th_sat_vg, th_res_vg])
+           x_alpha_vg = csite_hydr%AggBCToRhiz(bc_in(s)%sucsat_sisl,j,bc_in(s)%dz_sisl)
+           x_psd_vg    = csite_hydr%AggBCToRhiz(bc_in(s)%bsw_sisl,j,bc_in(s)%dz_sisl)
+           x_m_vg    = 1._r8-x_psd_vg
+           call wrf_vg%set_wrf_param([x_alpha_vg, x_psd_vg, x_m_vg, th_sat_vg, th_res_vg])
         end do
      case(campbell_type)
         do j=1,csite_hydr%nlevrhiz
@@ -1676,7 +1687,10 @@ subroutine HydrSiteColdStart(sites, bc_in )
         do j=1,sites(s)%si_hydr%nlevrhiz
            allocate(wkf_vg)
            csite_hydr%wkf_soil(j)%p => wkf_vg
-           call wkf_vg%set_wkf_param([alpha_vg, psd_vg, m_vg, th_sat_vg, th_res_vg, soil_tort_vg])
+           x_alpha_vg = csite_hydr%AggBCToRhiz(bc_in(s)%sucsat_sisl,j,bc_in(s)%dz_sisl)
+           x_psd_vg    = csite_hydr%AggBCToRhiz(bc_in(s)%bsw_sisl,j,bc_in(s)%dz_sisl)
+           x_m_vg    = 1._r8-x_psd_vg
+           call wkf_vg%set_wkf_param([x_alpha_vg, x_psd_vg, x_m_vg, th_sat_vg, th_res_vg, soil_tort_vg])
         end do
      case(campbell_type)
         do j=1,sites(s)%si_hydr%nlevrhiz
